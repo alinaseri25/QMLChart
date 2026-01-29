@@ -11,6 +11,7 @@ qt_standard_project_setup(REQUIRES 6.8)
 qt_add_executable(QMLChart
     main.cpp
     backend.h backend.cpp
+    mylistmodel.cpp mylistmodel.h
 )
 
 # ✅ استفاده از qt6_add_resources بجای qt_add_qml_module

@@ -6,6 +6,7 @@
 #include <QPointF>
 #include <QRandomGenerator>
 #include <QDebug>
+#include <QDateTime>
 
 class Backend : public QObject
 {
@@ -27,6 +28,7 @@ public slots:
 signals:
     void stateChanged(bool state);
     void dataChanged(QList<QPointF> dataPoints);
+    void newPoint(QPointF dataPoint);
 };
 
 #endif // BACKEND_H

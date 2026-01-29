@@ -34,15 +34,29 @@ Item {
         width: parent.width
         height: parent.height - 50
 
-        // تعریف محور X
-        ValueAxis {
+        animationOptions: ChartView.NoAnimation
+
+        // ✅ محور X را DateTime تعریف می‌کنیم
+        DateTimeAxis {
             id: axisX
-            min: 0              // حداقل مقدار
-            max: 100            // حداکثر مقدار
-            tickCount: 11       // تعداد tick marks (0, 10, 20, ..., 100)
-            labelFormat: "%.0f" // فرمت نمایش اعداد (بدون اعشار)
-            titleText: "زمان (ثانیه)"
+            format: "hh:mm:ss"          // فرمت نمایش: ساعت:دقیقه:ثانیه
+            tickCount: 6                // تعداد برچسب‌ها
+            titleText: "زمان"
+
+            // محدوده زمانی اولیه (10 ثانیه گذشته تا الان)
+            min: new Date(Date.now())
+            max: new Date(Date.now() + 10000)  // 100 ثانیه بعد
         }
+
+        // // تعریف محور X
+        // ValueAxis {
+        //     id: axisX
+        //     min: 0              // حداقل مقدار
+        //     max: 100            // حداکثر مقدار
+        //     tickCount: 11       // تعداد tick marks (0, 10, 20, ..., 100)
+        //     labelFormat: "%.0f" // فرمت نمایش اعداد (بدون اعشار)
+        //     titleText: "زمان (ثانیه)"
+        // }
 
         // تعریف محور Y
         ValueAxis {
@@ -62,7 +76,7 @@ Item {
             axisY: axisY
         }
 
-        // ✅ برای حرکات چند لمسی (Pinch to Zoom)
+        // PinchArea و MouseArea همون‌طوری که قبلاً بود...
         PinchArea {
             id: pinchArea
             anchors.fill: parent
@@ -73,20 +87,20 @@ Item {
             property real initialYMax
 
             onPinchStarted: {
-                initialXMin = axisX.min
-                initialXMax = axisX.max
+                initialXMin = axisX.min.getTime()
+                initialXMax = axisX.max.getTime()
                 initialYMin = axisY.min
                 initialYMax = axisY.max
             }
 
             onPinchUpdated: (pinch) => {
-                // محاسبه zoom factor از مقیاس pinch
                 let scale = 1.0 / pinch.scale
 
+                // ✅ برای DateTime باید با millisecond کار کنیم
                 let xRange = initialXMax - initialXMin
                 let xCenter = (initialXMax + initialXMin) / 2
-                axisX.min = xCenter - (xRange * scale) / 2
-                axisX.max = xCenter + (xRange * scale) / 2
+                axisX.min = new Date(xCenter - (xRange * scale) / 2)
+                axisX.max = new Date(xCenter + (xRange * scale) / 2)
 
                 let yRange = initialYMax - initialYMin
                 let yCenter = (initialYMax + initialYMin) / 2
@@ -94,7 +108,6 @@ Item {
                 axisY.max = yCenter + (yRange * scale) / 2
             }
 
-            // ✅ MouseArea داخل PinchArea برای Pan
             MouseArea {
                 id: chartMouseArea
                 anchors.fill: parent
@@ -104,14 +117,14 @@ Item {
                 property real lastY: 0
                 property bool isPanning: false
 
-                // ✅ Mouse wheel برای Desktop
                 onWheel: (wheel) => {
                     let zoomFactor = wheel.angleDelta.y > 0 ? 0.9 : 1.1
 
-                    let xRange = axisX.max - axisX.min
-                    let xCenter = (axisX.max + axisX.min) / 2
-                    axisX.min = xCenter - (xRange * zoomFactor) / 2
-                    axisX.max = xCenter + (xRange * zoomFactor) / 2
+                    // ✅ Zoom برای محور DateTime
+                    let xRange = axisX.max.getTime() - axisX.min.getTime()
+                    let xCenter = (axisX.max.getTime() + axisX.min.getTime()) / 2
+                    axisX.min = new Date(xCenter - (xRange * zoomFactor) / 2)
+                    axisX.max = new Date(xCenter + (xRange * zoomFactor) / 2)
 
                     let yRange = axisY.max - axisY.min
                     let yCenter = (axisY.max + axisY.min) / 2
@@ -119,7 +132,6 @@ Item {
                     axisY.max = yCenter + (yRange * zoomFactor) / 2
                 }
 
-                // ✅ Pan برای هم Desktop و هم Touch
                 onPressed: (mouse) => {
                     isPanning = true
                     lastX = mouse.x
@@ -131,14 +143,15 @@ Item {
                         let dx = mouse.x - lastX
                         let dy = mouse.y - lastY
 
-                        let xRange = axisX.max - axisX.min
+                        // ✅ Pan برای محور DateTime
+                        let xRange = axisX.max.getTime() - axisX.min.getTime()
                         let yRange = axisY.max - axisY.min
 
                         let xShift = -(dx / chartView.plotArea.width) * xRange
                         let yShift = (dy / chartView.plotArea.height) * yRange
 
-                        axisX.min += xShift
-                        axisX.max += xShift
+                        axisX.min = new Date(axisX.min.getTime() + xShift)
+                        axisX.max = new Date(axisX.max.getTime() + xShift)
                         axisY.min += yShift
                         axisY.max += yShift
 
@@ -151,10 +164,10 @@ Item {
                     isPanning = false
                 }
 
-                // ✅ Double tap برای Reset
                 onDoubleClicked: {
-                    axisX.min = 0
-                    axisX.max = 100
+                    // Reset به 10 ثانیه گذشته
+                    axisX.min = new Date(Date.now() - 10000)
+                    axisX.max = new Date(Date.now())
                     axisY.min = -10
                     axisY.max = 10
                 }
@@ -173,6 +186,9 @@ Item {
             if(state)
             {
                 startStopButton.text = "stop"
+                // محدوده زمانی اولیه (10 ثانیه گذشته تا الان)
+                axisX.min = new Date(Date.now())
+                axisX.max =  new Date(Date.now() + 10000)  // 100 ثانیه بعد
             }
             else
             {
@@ -189,6 +205,19 @@ Item {
                 axisX.min = dataPoints[dataPoints.length - 1].x - 99
                 axisX.max = dataPoints[dataPoints.length - 1].x + 1
             }
+        }
+
+        function onNewPoint(dataPoint){
+            let dateTime = new Date(dataPoint.x)
+            spLine1.append(dateTime,dataPoint.y)
+
+            // ✅ Auto-scroll: وقتی از محدوده خارج شد، محور رو shift بده
+            if (dateTime.getTime() > axisX.max.getTime()) {
+                let range = axisX.max.getTime() - axisX.min.getTime()
+                axisX.min = new Date(dateTime.getTime() - range + 1000)
+                axisX.max = new Date(dateTime.getTime() + 1000)
+            }
+
         }
     }
 }
