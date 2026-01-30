@@ -28,7 +28,7 @@ public slots:
 signals:
     void stateChanged(bool state);
     void dataChanged(QList<QPointF> dataPoints);
-    void newPoint(QPointF dataPoint);
+    void newPoint(QPointF dataPoint1,QPointF dataPoint2);
 };
 
 #endif // BACKEND_H

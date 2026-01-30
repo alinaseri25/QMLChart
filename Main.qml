@@ -68,22 +68,41 @@ Item {
 
         // تعریف محور Y
         ValueAxis {
-            id: axisY
+            id: axisY1
             min: -10
             max: 10
             tickCount: 5
             labelFormat: "%.1f"  // یک رقم اعشار
-            titleText: "مقدار"
+            titleText: "قد"
+        }
+
+        ValueAxis {
+            id: axisY2
+            min: 40
+            max: 50
+            tickCount: 5
+            labelFormat: "%.1f"  // یک رقم اعشار
+            titleText: "وزن"
         }
 
         SplineSeries {
         //LineSeries {
             id: spLine1
-            name: "Spline"
+            name: "قد"
             useOpenGL: true
 
             axisX: axisX
-            axisY: axisY
+            axisY: axisY1
+        }
+
+        SplineSeries {
+        //LineSeries {
+            id: spLine2
+            name: "وزن"
+            useOpenGL: true
+
+            axisX: axisX
+            axisY: axisY2
         }
 
         // PinchArea و MouseArea همون‌طوری که قبلاً بود...
@@ -185,6 +204,38 @@ Item {
         }
     }
 
+    CButton{
+        id: sBtn1
+        text: "series 1"
+
+        width: 100
+        height: 40
+
+        x: startStopButton.x - 120
+        y: 10
+
+
+        onClicked: {
+            spLine1.visible = !spLine1.visible
+        }
+    }
+
+    CButton{
+        id: sBtn2
+        text: "series 2"
+
+        width: 100
+        height: 40
+
+        x: startStopButton.x + 120
+        y: 10
+
+
+        onClicked: {
+            spLine2.visible = !spLine2.visible
+        }
+    }
+
     Component.onCompleted: {
         startStopSignal.connect(myBackend.onStartStopPressed)
     }
@@ -220,9 +271,10 @@ Item {
             }
         }
 
-        function onNewPoint(dataPoint){
-            let dateTime = new Date(dataPoint.x)
-            spLine1.append(dateTime.getTime(),dataPoint.y)
+        function onNewPoint(dataPoint1,dataPoint2){
+            let dateTime = new Date(dataPoint1.x)
+            spLine1.append(dateTime.getTime(),dataPoint1.y)
+            spLine2.append(dateTime.getTime(),dataPoint2.y)
             //debugText.text = dateTime.getTime() + " -- data : " + dataPoint.y
 
             // ✅ Auto-scroll: وقتی از محدوده خارج شد، محور رو shift بده
