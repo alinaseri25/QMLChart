@@ -24,6 +24,14 @@ Item {
         }
     }
 
+    Text{
+        id: debugText
+        x: 0
+        y: 0
+        width: 200
+        height: 50
+    }
+
     ChartView {
         id: chartView
         title: "Spline Chart"
@@ -69,8 +77,10 @@ Item {
         }
 
         SplineSeries {
+        //LineSeries {
             id: spLine1
             name: "Spline"
+            useOpenGL: true
 
             axisX: axisX
             axisY: axisY
@@ -188,7 +198,10 @@ Item {
                 startStopButton.text = "stop"
                 // محدوده زمانی اولیه (10 ثانیه گذشته تا الان)
                 axisX.min = new Date(Date.now())
-                axisX.max =  new Date(Date.now() + 10000)  // 100 ثانیه بعد
+                axisX.max = new Date(Date.now() + 10000)  // 100 ثانیه بعد
+
+                let dateTime = Date.now()
+                spLine1.append(dateTime,0)
             }
             else
             {
@@ -209,10 +222,11 @@ Item {
 
         function onNewPoint(dataPoint){
             let dateTime = new Date(dataPoint.x)
-            spLine1.append(dateTime,dataPoint.y)
+            spLine1.append(dateTime.getTime(),dataPoint.y)
+            //debugText.text = dateTime.getTime() + " -- data : " + dataPoint.y
 
             // ✅ Auto-scroll: وقتی از محدوده خارج شد، محور رو shift بده
-            if (dateTime.getTime() > axisX.max.getTime()) {
+            if (dateTime.getTime() > (axisX.max.getTime() - 1000)) {
                 let range = axisX.max.getTime() - axisX.min.getTime()
                 axisX.min = new Date(dateTime.getTime() - range + 1000)
                 axisX.max = new Date(dateTime.getTime() + 1000)

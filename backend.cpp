@@ -12,7 +12,7 @@ Backend::Backend(QObject *parent)
 void Backend::onSeriesTimerTimeout()
 {
     QPointF point;
-    point.setX(QDateTime::currentDateTime().toMSecsSinceEpoch());
+    point.setX(QDateTime::currentMSecsSinceEpoch());
     point.setY(QRandomGenerator::global()->bounded(-10,10));
     dataList.append(point);
     //emit dataChanged(dataList);
